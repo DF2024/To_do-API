@@ -1,9 +1,9 @@
 import uvicorn
 
 from fastapi import FastAPI, Request
-from db import SessionDep, create_all_tables
 from sqlmodel import select
-from routers import todo
+from app.routers import todo
+from app.db import SessionDep, create_all_tables
 
 
 app = FastAPI(
