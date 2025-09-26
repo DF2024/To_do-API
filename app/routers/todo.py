@@ -2,11 +2,12 @@ import uvicorn
 
 from sqlmodel import select, update
 from fastapi import APIRouter, FastAPI, HTTPException, status, Query
-from app.models import Task, TaskCreate, TaskUpdate
+from app.models import Task, TaskCreate, TaskUpdate, StatusEnum
 from app.db import SessionDep
 
 router = APIRouter()
 
+## CREAR TAREAS
 
 @router.post("/tasks", response_model = Task, tags = ['tasks'])
 async def taskCreate(task_data : TaskCreate, session: SessionDep):
@@ -16,6 +17,8 @@ async def taskCreate(task_data : TaskCreate, session: SessionDep):
     session.refresh(task)
     return task
 
+## LISTAR TAREAS
+
 @router.get("/tasks", response_model = list[Task], tags = ['tasks']) 
 async def task_list(session: SessionDep):
     statament = select(Task)
@@ -23,11 +26,34 @@ async def task_list(session: SessionDep):
     tasks = result.all()
     return tasks
 
+## LLAMAR A UNA TAREA POR ID
+
 @router.get("/tasks/{id_task}", response_model = Task, tags=['tasks'])
 async def task_id(id_task : int, session : SessionDep):
     statament = select(Task).where(Task.id == id_task)
     task = session.exec(statament).one()
     return task
+
+## LLAMAR A UNA TAREA POR ESTADO
+
+@router.get("/task/{status}", response_model = list[Task], tags=['tasks'])
+async def task_status(
+    session : SessionDep,
+    task_status : StatusEnum = Query()
+    ):
+
+    query = (
+        select(Task)
+        .where(Task.status == task_status)
+    )
+
+    tasks = session.exec(query)
+
+    return tasks
+
+
+
+## BORRAR TAREA POR ID
 
 @router.delete("/tasks/{id_task}", tags = ['tasks'])
 async def task_delete(id_task : int, session : SessionDep):
@@ -41,6 +67,9 @@ async def task_delete(id_task : int, session : SessionDep):
     session.commit()
     return {'message': 'Task deleted successfully', 'deleted_task': task_db.dict()}
 
+
+
+## ACTUALIZAR TAREA POR ID
 
 @router.patch("/tasks/{id_task}", tags = ['tasks'])
 async def task_put(id_task : int, data : TaskUpdate, session : SessionDep):
