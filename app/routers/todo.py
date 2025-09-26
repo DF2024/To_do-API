@@ -1,8 +1,8 @@
 import uvicorn
 
-from sqlmodel import select
+from sqlmodel import select, update
 from fastapi import APIRouter, FastAPI, HTTPException, status, Query
-from app.models import Task, TaskCreate
+from app.models import Task, TaskCreate, TaskUpdate
 from app.db import SessionDep
 
 router = APIRouter()
@@ -42,3 +42,23 @@ async def task_delete(id_task : int, session : SessionDep):
     return {'message': 'Task deleted successfully', 'deleted_task': task_db.dict()}
 
 
+@router.patch("/tasks/{id_task}", tags = ['tasks'])
+async def task_put(id_task : int, data : TaskUpdate, session : SessionDep):
+    task_db = session.get(Task, id_task)
+    if not task_db:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Task doesn't exist"
+        )
+    
+    update_data = data.dict(exclude_unset=True)
+
+    if update_data:
+        statement = update(Task).where(Task.id == id_task).values(**update_data)
+    
+        session.exec(statement)
+        session.commit()
+        task_db = session.get(Task, id_task)
+
+
+    return task_db

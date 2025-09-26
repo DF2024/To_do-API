@@ -23,5 +23,7 @@ class TaskCreate(TaskBase):
 class Task(TaskBase, table = True):
     id : int | None = Field(default = None, primary_key=True)
 
+class TaskUpdate(TaskBase):
+    pass
 
-
+ 
