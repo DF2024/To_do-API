@@ -29,5 +29,16 @@ async def task_id(id_task : int, session : SessionDep):
     task = session.exec(statament).one()
     return task
 
+@router.delete("/tasks/{id_task}", tags = ['tasks'])
+async def task_delete(id_task : int, session : SessionDep):
+    task_db = session.get(Task, id_task)
+    if not task_db:
+        raise HTTPException(
+            status_code = status.HTTP_404_NOT_FOUND, detail = "Task doesn't exist"
+        )
+
+    session.delete(task_db)
+    session.commit()
+    return {'message': 'Task deleted successfully', 'deleted_task': task_db.dict()}
 
 
